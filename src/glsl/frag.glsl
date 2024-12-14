@@ -40,18 +40,20 @@ uniform float redSphereSheen;
 uniform vec3  blueSphereSheenColor;
 uniform vec3  redSphereSheenColor;
 
+uniform vec3 cameraPos;
+uniform vec3 cameraRot;
+uniform float cameraFov;
+
 
 //--------------------------------------------------------------
 // Global Parameters and Scene Configuration
 //--------------------------------------------------------------
 
-#define MAX_STEPS 100
+#define MAX_STEPS 300
 #define MAX_DIST 100.0
-#define SURF_DIST 0.001
+#define SURF_DIST 0.01
 
-vec3  camPos = vec3(0.0, 1.0, 0.0);
-vec3  camRot = vec3(0.0, 0.0, 0.0);
-float camFov = 90.0;
+float camFov = 40.0;
 
 // Lighting: define multiple lights
 #define NUM_LIGHTS 3
@@ -74,35 +76,7 @@ vec3 ambientLightColor = vec3(0.07);
 // Background color
 vec3 backgroundColor = vec3(0.0);
 
-//--------------------------------------------------------------
-// Material Parameters
-//--------------------------------------------------------------
 
-// Sphere 1 (Blue Sphere)
-vec3  spherePos1    = blueSpherePos.xyz;
-float sphereRad1    = blueSphereRadius;
-vec3  sphereColor1  = blueSphereColor;
-float sphereMetal1  = blueSphereMetalness;
-float sphereRough1  = blueSphereRoughness;
-vec3  sphereEmiss1  = blueSphereEmissive;
-float sphereAniso1  = blueSphereAnisotropy;
-float sphereSSS1    = blueSphereSubsurface;
-vec3  sphereSSSCol1 = blueSphereSubsurfaceColor;
-float sphereSheen1  = blueSphereSheen;
-vec3  sphereSheenCol1 = blueSphereSheenColor;
-
-// Sphere 2 (Red Sphere)
-vec3  spherePos2    = redSpherePos.xyz;
-float sphereRad2    = redSphereRadius;
-vec3  sphereColor2  = redSphereColor;
-float sphereMetal2  = redSphereMetalness;
-float sphereRough2  = redSphereRoughness;
-vec3  sphereEmiss2  = redSphereEmissive;
-float sphereAniso2  = redSphereAnisotropy;
-float sphereSSS2    = redSphereSubsurface;
-vec3  sphereSSSCol2 = redSphereSubsurfaceColor;
-float sphereSheen2  = redSphereSheen;
-vec3  sphereSheenCol2 = redSphereSheenColor;
 
 //--------------------------------------------------------------
 // Ray and Surface Structures
@@ -130,6 +104,16 @@ struct Surface {
 //--------------------------------------------------------------
 float sdSphere(vec3 p, float r) {
     return length(p) - r;
+}
+
+float sdPlane(vec3 p, vec3 n, float h) {
+    return dot(p, n) + h;
+} 
+
+// rounded box
+float sdRoundedBox(vec3 p, vec3 b, float r) {
+    vec3 q = abs(p) - b;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0) - r;
 }
 
 //--------------------------------------------------------------
@@ -162,33 +146,34 @@ Surface Smin(Surface a, Surface b, float k) {
 // Scene Mapping
 //--------------------------------------------------------------
 Surface mapScene(in vec3 p) {
-    // Sphere 1
+    // Sphere 1 (Blue)
     Surface sphere1;
-    sphere1.signedDistance  = sdSphere(Translate(p, spherePos1), sphereRad1);
-    sphere1.baseColor       = sphereColor1;
-    sphere1.metallic        = sphereMetal1;
-    sphere1.roughness       = sphereRough1;
-    sphere1.emissive        = sphereEmiss1;
-    sphere1.anisotropy      = sphereAniso1;
-    sphere1.subsurface      = sphereSSS1;
-    sphere1.subsurfaceColor = sphereSSSCol1;
-    sphere1.sheen           = sphereSheen1;
-    sphere1.sheenColor      = sphereSheenCol1;
+    sphere1.signedDistance  = sdSphere(Translate(p, blueSpherePos), blueSphereRadius);
+    sphere1.baseColor       = blueSphereColor;
+    sphere1.metallic        = blueSphereMetalness;
+    sphere1.roughness       = blueSphereRoughness;
+    sphere1.emissive        = blueSphereEmissive;
+    sphere1.anisotropy      = blueSphereAnisotropy;
+    sphere1.subsurface      = blueSphereSubsurface;
+    sphere1.subsurfaceColor = blueSphereSubsurfaceColor;
+    sphere1.sheen           = blueSphereSheen;
+    sphere1.sheenColor      = blueSphereSheenColor;
 
-    // Sphere 2
+    // Sphere 2 (Red)
     Surface sphere2;
-    sphere2.signedDistance  = sdSphere(Translate(p, spherePos2), sphereRad2);
-    sphere2.baseColor       = sphereColor2;
-    sphere2.metallic        = sphereMetal2;
-    sphere2.roughness       = sphereRough2;
-    sphere2.emissive        = sphereEmiss2;
-    sphere2.anisotropy      = sphereAniso2;
-    sphere2.subsurface      = sphereSSS2;
-    sphere2.subsurfaceColor = sphereSSSCol2;
-    sphere2.sheen           = sphereSheen2;
-    sphere2.sheenColor      = sphereSheenCol2;
+    sphere2.signedDistance  = sdSphere(Translate(p, redSpherePos), redSphereRadius);
+    // sphere2.signedDistance  = sdPlane(p, vec3(0.0, 1.0, 0.0), 0.0);
+    // sphere2.signedDistance  = sdRoundedBox(Translate(p, redSpherePos), vec3(0.6), 0.0);
+    sphere2.baseColor       = redSphereColor;
+    sphere2.metallic        = redSphereMetalness;
+    sphere2.roughness       = redSphereRoughness;
+    sphere2.emissive        = redSphereEmissive;
+    sphere2.anisotropy      = redSphereAnisotropy;
+    sphere2.subsurface      = redSphereSubsurface;
+    sphere2.subsurfaceColor = redSphereSubsurfaceColor;
+    sphere2.sheen           = redSphereSheen;
+    sphere2.sheenColor      = redSphereSheenColor;
 
-    // Combine spheres with a smooth min
     Surface sceneSurface = Smin(sphere1, sphere2, 1.0);
     return sceneSurface;
 }
@@ -437,10 +422,10 @@ void main() {
         uv *= scale;
 
         vec3 rd = normalize(vec3(uv, 1.0));
-        rd = rotationY(camRot.y) * rotationX(camRot.x) * rotationZ(camRot.z) * rd;
+        rd = rotationY(cameraRot.y) * rotationX(cameraRot.x) * rotationZ(cameraRot.z) * rd;
 
         Ray ray;
-        ray.origin = camPos;
+        ray.origin = cameraPos;
         ray.direction = rd;
 
         vec4 color = rayMarch(ray);
