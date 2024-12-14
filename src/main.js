@@ -30,7 +30,7 @@ let blueSphere = {
   subsurface: 0.0,
   subsurfaceColor: { r: 0, g: 0, b: 0 },
   sheen: 0.0,
-  sheenTint: { r: 0, g: 0, b: 0 },
+  sheenTint: { r: 255, g: 255, b: 255 },
 };
 
 let redSphere = {
@@ -44,7 +44,7 @@ let redSphere = {
   subsurface: 0.0,
   subsurfaceColor: { r: 0, g: 0, b: 0 },
   sheen: 0.0,
-  sheenTint: { r: 0, g: 0, b: 0 },
+  sheenTint: { r: 255, g: 255, b: 255 },
 };
 
 let camera = {
