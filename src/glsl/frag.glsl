@@ -116,6 +116,26 @@ float sdRoundedBox(vec3 p, vec3 b, float r) {
     return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0) - r;
 }
 
+// mandelbulb
+float DE_Mandelbulb(vec3 p, float power, float bailout) {
+    vec3 z = p;
+    float dr = 1.0;
+    float r = 0.0;
+    for (int i = 0; i < 5; i++) {
+        r = length(z);
+        if (r > bailout) break;
+        float theta = acos(z.z / r);
+        float phi = atan(z.y, z.x);
+        dr = pow(r, power - 1.0) * power * dr + 1.0;
+        float zr = pow(r, power);
+        theta = theta * power;
+        phi = phi * power;
+        z = zr * vec3(sin(theta) * cos(phi), sin(phi) * sin(theta), cos(theta));
+        z += p;
+    }
+    return 0.5 * log(r) * r / dr;
+}
+
 //--------------------------------------------------------------
 // Transform Utilities
 //--------------------------------------------------------------
@@ -164,6 +184,7 @@ Surface mapScene(in vec3 p) {
     sphere2.signedDistance  = sdSphere(Translate(p, redSpherePos), redSphereRadius);
     // sphere2.signedDistance  = sdPlane(p, vec3(0.0, 1.0, 0.0), 0.0);
     // sphere2.signedDistance  = sdRoundedBox(Translate(p, redSpherePos), vec3(0.6), 0.0);
+    // sphere2.signedDistance  = DE_Mandelbulb(Translate(p, redSpherePos), 8.0, 8.0);
     sphere2.baseColor       = redSphereColor;
     sphere2.metallic        = redSphereMetalness;
     sphere2.roughness       = redSphereRoughness;
