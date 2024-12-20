@@ -1,3 +1,34 @@
-GLSL based raymarched-modeler WIP.
+# RayModeler
 
-<img width="997" alt="img" src="https://github.com/user-attachments/assets/d78c9266-6772-49bd-860f-67d099ca0b93" />
+A minimal Electron application with JavaScript
+
+## Recommended IDE Setup
+
+- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+
+## Project Setup
+
+### Install
+
+```bash
+$ npm install
+```
+
+### Development
+
+```bash
+$ npm run dev
+```
+
+### Build
+
+```bash
+# For windows
+$ npm run build:win
+
+# For macOS
+$ npm run build:mac
+
+# For Linux
+$ npm run build:linux
+```
