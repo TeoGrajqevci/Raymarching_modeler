@@ -1,6 +1,4 @@
-# RayModeler
 
-A minimal Electron application with
 
 ## Project Setup
 
